@@ -95,4 +95,33 @@ class ModelosController extends Controller
             'data' => $micas
         ], 200);
     }
+
+    public function obtenerMicaPrivacidad($id)
+    {
+        // Realizamos la consulta con Query Builder utilizando el parámetro $id
+        $micas = DB::table('micas100d as mi')
+            ->join('marca as ma', 'ma.id_marca', '=', 'mi.marca')
+            ->join('posicion as p', 'p.id_posicion', '=', 'mi.posicion')
+            ->join('nombre_mica100d as nm', 'nm.id_mica100d', '=', 'mi.id_mica100d')
+            ->join('modelos as mo', 'mo.id_modelo', '=', 'nm.nombre_modelo')
+            ->select(
+                'ma.marca',
+                'mi.notas',
+                'mi.cantidad',
+                'p.muro',
+                'p.nombre',
+                DB::raw('GROUP_CONCAT(" ", ma.marca, " ", mo.nombre) AS modelos'),
+                'nm.id_mica100d'
+            )
+            ->groupBy('mi.id_mica100d', 'ma.marca', 'mi.cantidad', 'p.muro', 'p.nombre', 'nm.id_mica100d', 'mi.notas', 'p.muro', 'p.nombre')
+            ->havingRaw('SUM(mo.id_modelo = ?) > 0', [$id])
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Consulta exitosa',
+            'codigo' => 200,
+            'data' => $micas
+        ], 200);
+    }
 }
